@@ -19,7 +19,8 @@ The variables included in this dataset are:
 The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
 
 ###Loading and preprocessing the data
-```{r}
+
+```r
 setwd("C:/general/education/dataScience/05-ReproducibleResearch/PA1")
 act <-read.csv("activity.csv", header=TRUE, colClasses=c("numeric", "Date","numeric"))
 ```
@@ -30,34 +31,40 @@ act <-read.csv("activity.csv", header=TRUE, colClasses=c("numeric", "Date","nume
 
 #####Only consider the complete cases within the data ...  
   
-```{r}
+
+```r
 actCompIndex <- complete.cases(act)
 
 actComp <- act[actCompIndex, ]
-````
+```
 
 #####Get the total steps summed over each day ...  
 
-```{r}
+
+```r
 actSPD <- as.data.frame(tapply(actComp$steps, INDEX = actComp$date, FUN = "sum", na.rm = TRUE))
 
 colnames(actSPD) <-"steps"
 ```
 
 ####Step 2 - Plot the Histogram ...
-```{r}
+
+```r
 hist(actSPD$steps, main = "Total Number of Steps Taken Each Day", 
     xlab = "Total Number of Steps Per Day", ylab = "Frequency", 
     breaks = 20, xlim = c(0, 25000), ylim = c(0, 12), col = "blue")
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+
 ####Step 3 - Calculate the Mean and Median of the Total Number of Steps Taken Each Day ...  
 
-```{r}
+
+```r
 meanSteps <- mean(actSPD$steps, na.rm = TRUE)
 medianSteps <- median(actSPD$steps, na.rm = TRUE)
 ```
-The mean of the total steps per day is `r sprintf("%6.2f", meanSteps)` and the median is `r sprintf("%6.2f", medianSteps)`.
+The mean of the total steps per day is 10766.19 and the median is 10765.00.
 
 ###What is the average daily activity pattern?
 
@@ -65,24 +72,30 @@ The mean of the total steps per day is `r sprintf("%6.2f", meanSteps)` and the m
 
 - Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 actASI <- as.data.frame(tapply(actComp$steps, INDEX = actComp$interval, FUN = "mean", na.rm = TRUE))
 colnames(actASI) <- "average"
 ```
 
-```{r results = "asis"}
+
+```r
 actASI$interval <- rownames(actASI)
 plot(actASI$interval, actASI$average, type = "l",
      xlab = "Time Interval ID",
      ylab = "Average number of steps",
      main = "Average Number of Steps by 5 Minute Interval", 
      col = "blue")
+```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+
+```r
 actASI_MAX <- actASI[(actASI$average == max(actASI$average)), ]
 maxStepsInterval <- actASI_MAX[1, 2]
 maxSteps <- actASI_MAX[1, 1]
 ```
-The 5-minute interval, on average across all the days in the dataset, having the maximum number of steps is interval number `r sprintf("%s", maxStepsInterval)` and has a value of `r sprintf("%6.2f", maxSteps)` steps.
+The 5-minute interval, on average across all the days in the dataset, having the maximum number of steps is interval number 835 and has a value of 206.17 steps.
 
 ###Imputing missing values
 
@@ -90,41 +103,50 @@ Note that there are a number of days/intervals where there are missing values (c
 
 - Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 
-```{r}
+
+```r
 actNA <- nrow(act) - nrow(na.omit(act))
 ```
-There are `r actNA` missing values in the original dataset.
+There are 2304 missing values in the original dataset.
 
 - Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
 - Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r}
+
+```r
 tmpCount <- act[!actCompIndex, ]
 tmpCount[, 1] <- 1
 tmpSPDFix <- as.data.frame(tapply(tmpCount$steps, INDEX = tmpCount$date, FUN = "sum", na.rm = TRUE))
 daysMissing <- nrow(tmpSPDFix)
 daysMissingMean <- mean(tmpSPDFix[,1])
 ```
-There are `r daysMissing` days in which data are missing an average of `r daysMissingMean` readings.
+There are 8 days in which data are missing an average of 288 readings.
 
-```{r}
+
+```r
 actFixNA <- act
 actFixNA[!actCompIndex, 1] <- medianSteps / 288
 ```
 
 - Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-```{r}
+
+```r
 actSPDFix <- as.data.frame(tapply(actFixNA$steps, INDEX = actFixNA$date, FUN = "sum", na.rm = TRUE))
 colnames(actSPDFix) <- "steps"
 hist(actSPDFix$steps, main = "Total Number of Steps Taken Each Day", 
     xlab = "Total Number of Steps Per Day", ylab = "Frequency", 
     breaks = 20, xlim = c(0, 25000), ylim = c(0, 20), col = "blue")
+```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
+
+```r
 meanStepsFix <- mean(actSPDFix$steps, na.rm = TRUE)
 medianStepsFix <- median(actSPDFix$steps, na.rm = TRUE)
 ```
-The mean of the total steps per day is now `r sprintf("%6.2f", meanStepsFix)` and the median is `r sprintf("%6.2f", medianStepsFix)`. Adding in the fix data had no effect on these values but the number of days with the median number of steps has increased as expected by the missing `r daysMissing` days.
+The mean of the total steps per day is now 10766.03 and the median is 10765.00. Adding in the fix data had no effect on these values but the number of days with the median number of steps has increased as expected by the missing 8 days.
 
 ###Are there differences in activity patterns between weekdays and weekends?
 
@@ -132,7 +154,8 @@ For this part the weekdays() function may be of some help here. Use the dataset 
 
 - Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r}
+
+```r
 actDay <- actFixNA
 
 actDay$weekPeriod <- grepl("^S", weekdays(actDay$date)) 
@@ -141,13 +164,44 @@ actDay[actDay$weekPeriod == "TRUE", 4] <- "weekend"
 head(actDay)
 ```
 
+```
+##      steps       date interval weekPeriod
+## 1 37.37847 2012-10-01        0    weekday
+## 2 37.37847 2012-10-01        5    weekday
+## 3 37.37847 2012-10-01       10    weekday
+## 4 37.37847 2012-10-01       15    weekday
+## 5 37.37847 2012-10-01       20    weekday
+## 6 37.37847 2012-10-01       25    weekday
+```
+
 - Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
 
-```{r}
+
+```r
 actDaySummary <- aggregate(actDay$steps, by =list(actDay$weekPeriod, actDay$interval), FUN = mean, na.rm = TRUE)
 colnames(actDaySummary) <- c("weekPart", "interval", "steps")
 head(actDaySummary)
+```
+
+```
+##   weekPart interval    steps
+## 1  weekday        0 7.006019
+## 2  weekend        0 4.672309
+## 3  weekday        5 5.383796
+## 4  weekend        5 4.672309
+## 5  weekday       10 5.139352
+## 6  weekend       10 4.672309
+```
+
+```r
 library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.1.1
+```
+
+```r
 ggplot(actDaySummary, aes(x=interval, y=steps)) + 
                       geom_line(colour="blue") + 
                       facet_wrap(~weekPart, ncol= 1) + 
@@ -159,4 +213,6 @@ ggplot(actDaySummary, aes(x=interval, y=steps)) +
                             panel.background = element_rect(fill="#FFFFFF"))
 ```
 
-The implication of the last plot is that user activity is more evenly spread throughout the enitire day at weekends as compared to weekdays where the major activity takes place in the earlier part of the day. In general users are more active at the weekend (mean = `r mean(actDay[actDay$weekPeriod == "weekend", 1])`) than they are during the week (mean = `r mean(actDay[actDay$weekPeriod == "weekday", 1])`).
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
+
+The implication of the last plot is that user activity is more evenly spread throughout the enitire day at weekends as compared to weekdays where the major activity takes place in the earlier part of the day. In general users are more active at the weekend (mean = 42.3658854) than they are during the week (mean = 35.6100309).
